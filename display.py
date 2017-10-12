@@ -2,6 +2,7 @@ import curses
 import constants
 import threading
 import Queue
+import log
 
 
 class DisplayManager(object):
@@ -16,6 +17,8 @@ class DisplayManager(object):
         self.display_thread.start()
 
     def update(self, message=None):
+        if message != None:
+            log.info("Message from display: {}".format(message))
         self.update_queue.put(message)
 
     def exit(self):
@@ -91,6 +94,10 @@ class TextOnlyDisplayCurses(C4Display):
 
     def display(self, stdscr):
         self.stdscr = stdscr
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        self.stdscr.attron(curses.color_pair(1))
+        self.stdscr.bkgd(' ', curses.color_pair(1))
+
         self.stdscr.timeout(0)
         self.stdscr.clear()
 
@@ -117,15 +124,16 @@ class TextOnlyDisplayCurses(C4Display):
 
     def update_screen(self, message):
         self.stdscr.clear()
-        rownum = 0
-        self.stdscr.addstr(rownum, 0, "Welcome to Connect Four")
+        rownum = 1
+        colnum = 1
+        self.stdscr.addstr(rownum, colnum, "Welcome to Connect Four")
         rownum += 1
-        self.stdscr.addstr(rownum, 0, "Press 'q' to quit")
+        self.stdscr.addstr(rownum, colnum, "Press 'q' to quit")
         rownum += 1
         if message:
-            self.stdscr.addstr(rownum, 0, message)
+            self.stdscr.addstr(rownum, colnum, message)
             rownum += 1
-        self.stdscr.addstr(rownum, 0, "")
+        self.stdscr.addstr(rownum, colnum, "")
         rownum += 1
 
         for row in self.board:
@@ -136,8 +144,13 @@ class TextOnlyDisplayCurses(C4Display):
                 else:
                     rowstr += "-"
                 rowstr += "  "
-            self.stdscr.addstr(rownum, 0, rowstr)
+            self.stdscr.addstr(rownum, colnum, rowstr)
             rownum += 1
+
+        self.stdscr.addstr(rownum, colnum, "")
+        rownum += 1
+        self.stdscr.addstr(rownum, colnum, "0  1  2  3  4  5  6")
+        rownum += 1
 
 	self.stdscr.refresh()
 

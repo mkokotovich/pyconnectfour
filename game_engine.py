@@ -11,25 +11,25 @@ class GameEngine(object):
         self.last_move_row = None
         self.display = display
         self.turns = 0
-        self.player1_mark = "X"
-        self.player2_mark = "O"
-        self.player1 = SimplePlayer(self.player1_mark)
-        self.player2 = SimplePlayer(self.player2_mark)
+        self.playerX_mark = "X"
+        self.playerO_mark = "O"
+        self.playerX = RandomPlayer(self.playerX_mark)
+        self.playerO = RandomPlayer(self.playerO_mark)
         self.display.start(self.board)
 
 
     def play_game(self):
-        player1_turn = True
-        self.player1.reset()
-        self.player2.reset()
+        playerX_turn = True
+        self.playerX.reset()
+        self.playerO.reset()
 
         while not self.board_is_full():
-            self.display.update("{}'s turn".format( "Player 1" if player1_turn else "Player 2" ))
-            self.make_move(player1_turn)
-            if utils.check_for_winner(self.board, self.last_move_col, self.last_move_row, self.player1_mark if player1_turn else self.player2_mark):
-                self.display.update("Game over, {} won!".format( "Player 1" if player1_turn else "Player 2" ))
+            self.display.update("{}'s turn".format( "Player X" if playerX_turn else "Player O" ))
+            self.make_move(playerX_turn)
+            if utils.check_for_winner(self.board, self.last_move_col, self.last_move_row, self.playerX_mark if playerX_turn else self.playerO_mark):
+                self.display.update("Game over, {} won!".format( "Player X" if playerX_turn else "Player O" ))
                 return
-            player1_turn = not player1_turn
+            playerX_turn = not playerX_turn
 
         # Board is full, it is a tie
         self.display.update("Game over, it is a tie!")
@@ -40,16 +40,16 @@ class GameEngine(object):
         return self.turns >= constants.num_rows * constants.num_cols
 
 
-    def make_move(self, player1_turn):
+    def make_move(self, playerX_turn):
         move = None
         row = None
         log.debug("Matt, passing last_move_col as {}".format(self.last_move_col))
-        if player1_turn:
-            move = self.player1.move(self.board, self.last_move_col)
+        if playerX_turn:
+            move = self.playerX.move(self.board, self.last_move_col)
         else:
-            move = self.player2.move(self.board, self.last_move_col)
+            move = self.playerO.move(self.board, self.last_move_col)
 
-        log.debug("On turn {}, Player {} selects column {}".format(self.turns, "1" if player1_turn else "2", move))
+        log.debug("On turn {}, Player {} selects column {}".format(self.turns, "X" if playerX_turn else "O", move))
 
         if move < 0 or move > 6:
             raise Exception("Invalid move, less than 0 or greater than 6: {}".format(move))
@@ -57,7 +57,7 @@ class GameEngine(object):
         for i in range(0, constants.num_rows):
             row = constants.num_rows - 1 - i
             if self.board[row][move] == None:
-                self.board[row][move] = self.player1_mark if player1_turn else self.player2_mark
+                self.board[row][move] = self.playerX_mark if playerX_turn else self.playerO_mark
                 success = True
                 break
         if success == False:

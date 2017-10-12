@@ -18,7 +18,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the left
         col = move_col - i - 1
         if board[move_row][col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(col, move_row))
+            #log.info("Found consecutive mark at col: {} row: {}".format(col, move_row))
             cons_left += 1
         else:
             break
@@ -28,7 +28,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the right
         col = i
         if board[move_row][col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(col, move_row))
+            #log.info("Found consecutive mark at col: {} row: {}".format(col, move_row))
             cons_right += 1
         else:
             break
@@ -38,7 +38,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the right
         row = move_row - i - 1
         if board[row][move_col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(move_col, row))
+            #log.info("Found consecutive mark at col: {} row: {}".format(move_col, row))
             cons_up += 1
         else:
             break
@@ -48,7 +48,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the right
         row = i
         if board[row][move_col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(move_col, row))
+            #log.info("Found consecutive mark at col: {} row: {}".format(move_col, row))
             cons_down += 1
         else:
             break
@@ -61,7 +61,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row < 0:
             break
         if board[row][col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
             cons_nw += 1
         else:
             break
@@ -74,8 +74,8 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row < 0:
             break
         if board[row][col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(col, row))
-            cons_nw += 1
+            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            cons_ne += 1
         else:
             break
 
@@ -87,8 +87,8 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row >= constants.num_rows:
             break
         if board[row][col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(col, row))
-            cons_nw += 1
+            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            cons_sw += 1
         else:
             break
 
@@ -96,24 +96,28 @@ def check_for_winner(board, move_col, move_row, move_mark):
     row = move_row
     for i in range(move_col+1, constants.num_cols):
         col = i
-        row = row - 1
+        row = row + 1
         if row >= constants.num_rows:
             break
         if board[row][col] == move_mark:
-            log.info("Found consecutive mark at col: {} row: {}".format(col, row))
-            cons_nw += 1
+            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            cons_se += 1
         else:
             break
 
     # Including the move, we need to have three other consecutive pieces
     winner = False
     if cons_left + cons_right >= 3:
+        log.info("Won going left ({}) and right ({})".format(cons_left, cons_right))
         winner = True
     if cons_up + cons_down >= 3:
+        log.info("Won going up ({}) and down ({})".format(cons_up, cons_down))
         winner = True
     if cons_nw + cons_se >= 3:
+        log.info("Won going nw ({}) and se ({})".format(cons_nw, cons_se))
         winner = True
     if cons_ne + cons_sw >= 3:
+        log.info("Won going ne ({}) and sw ({})".format(cons_ne, cons_sw))
         winner = True
     log.info("Winner: {}".format(winner))
 
