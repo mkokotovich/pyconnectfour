@@ -3,6 +3,7 @@ import constants
 from player import *
 from move import *
 import log
+import copy
 
 class GameEngine(object):
     def __init__(self, display):
@@ -14,7 +15,7 @@ class GameEngine(object):
         self.playerX_mark = "X"
         self.playerO_mark = "O"
         self.playerX = HumanPlayer(self.playerX_mark, self.display)
-        self.playerO = RandomPlayer(self.playerO_mark)
+        self.playerO = MattAI(self.playerO_mark)
         self.display.start(self.board)
 
 
@@ -58,9 +59,9 @@ class GameEngine(object):
         move = None
         row = None
         if playerX_turn:
-            move = self.playerX.move(self.board, self.last_move_col)
+            move = self.playerX.move(copy.deepcopy(self.board), self.last_move_col)
         else:
-            move = self.playerO.move(self.board, self.last_move_col)
+            move = self.playerO.move(copy.deepcopy(self.board), self.last_move_col)
 
         log.debug("On turn {}, Player {} selects column {}".format(self.turns, "X" if playerX_turn else "O", move))
 
