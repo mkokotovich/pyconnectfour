@@ -9,17 +9,33 @@ class DisplayManager(object):
     def __init__(self, display):
         self.update_queue = Queue.Queue()
         self.update_queue.put(None)
+        self.input_queue = Queue.Queue()
         self.display = display
         self.display_thread = None
 
     def start(self, board):
-        self.display_thread = DisplayThread(self.update_queue, self.display, board)
+        self.display_thread = DisplayThread(self.update_queue, self.input_queue, self.display, board)
         self.display_thread.start()
 
     def update(self, message=None):
+        if not self.display_thread.isAlive():
+            raise constants.UserQuit("User quit the game")
         if message != None:
             log.info("Message from display: {}".format(message))
         self.update_queue.put(message)
+
+    def get_move(self, message):
+        if not self.display_thread.isAlive():
+            raise constants.UserQuit("User quit the game")
+        log.info("Asking user for input")
+        self.update_queue.put("input")
+        self.update_queue.put(message)
+        move = self.input_queue.get(block=True)
+        log.info("Received {} from user".format(move))
+        if move == None:
+            raise constants.UserQuit("User quit game")
+        return move
+        
 
     def exit(self):
         self.update_queue.put("die")
@@ -27,11 +43,12 @@ class DisplayManager(object):
 
 
 class DisplayThread(threading.Thread):
-    def __init__(self, update_queue, display, board):
+    def __init__(self, update_queue, input_queue, display, board):
         threading.Thread.__init__(self)
         self.update_queue = update_queue
+        self.input_queue = input_queue
         self.display = display
-        self.display.setup(self.update_queue, board)
+        self.display.setup(self.update_queue, self.input_queue, board)
 
     def run(self):
         self.display.display()
@@ -42,7 +59,7 @@ class C4Display(object):
     def __init__(self):
         pass
 
-    def setup(self, update_queue, board):
+    def setup(self, update_queue, input_queue, board):
         pass
 
     def exit(self):
@@ -67,8 +84,8 @@ class TextOnlyDisplay(C4Display):
         self.child = TextOnlyDisplayCurses()
 
 
-    def setup(self, update_queue, board):
-        self.child.setup(update_queue, board)
+    def setup(self, update_queue, input_queue, board):
+        self.child.setup(update_queue, input_queue, board)
 
 
     def exit(self):
@@ -83,10 +100,12 @@ class TextOnlyDisplayCurses(C4Display):
 
     def __init__(self):
         self.update_queue = None
+        self.input_queue = None
         self.stdscr = None
 
-    def setup(self, update_queue, board):
+    def setup(self, update_queue, input_queue, board):
         self.update_queue = update_queue
+        self.input_queue = input_queue
         self.board = board
 
     def exit(self):
@@ -94,7 +113,10 @@ class TextOnlyDisplayCurses(C4Display):
 
     def display(self, stdscr):
         self.stdscr = stdscr
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.use_default_colors()
+        curses.init_pair(1, -1, -1)
+        curses.init_pair(2, curses.COLOR_RED, -1)
+        curses.init_pair(3, curses.COLOR_YELLOW, -1)
         self.stdscr.attron(curses.color_pair(1))
         self.stdscr.bkgd(' ', curses.color_pair(1))
 
@@ -105,24 +127,38 @@ class TextOnlyDisplayCurses(C4Display):
 
         ch = 0 
         while ch != 'q':
+            get_input = False
+
             # Check for new board to update
             try:
                 message = self.update_queue.get(block=False)
                 if message == "die":
                     return
-                self.update_screen(message)
+                if message == "input":
+                    message = self.update_queue.get(block=True)
+                    get_input = True
+                self.update_screen(message, get_input=get_input)
             except:
                 # No updates for board
                 pass
 
             # Check for user input
-            try:
-                ch = self.stdscr.getkey()
-            except:
-                curses.napms(10)
+            while True:
+                try:
+                    ch = self.stdscr.getkey()
+                    if get_input:
+                        self.input_queue.put(ch)
+                    break
+                except:
+                    curses.napms(10)
+                    if not get_input:
+                        break
+
+        # Just in case game thread is waiting for input
+        self.input_queue.put(None)
 
 
-    def update_screen(self, message):
+    def update_screen(self, message, get_input=False):
         self.stdscr.clear()
         rownum = 1
         colnum = 1
@@ -151,6 +187,9 @@ class TextOnlyDisplayCurses(C4Display):
         rownum += 1
         self.stdscr.addstr(rownum, colnum, "0  1  2  3  4  5  6")
         rownum += 1
+        if get_input:
+            self.stdscr.addstr(rownum, colnum, "Please enter the column number you'd like to play in:")
+            rownum += 1
 
 	self.stdscr.refresh()
 

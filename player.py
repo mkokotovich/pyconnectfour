@@ -63,3 +63,24 @@ class RandomPlayer(Player):
                 self.columns[i].append(self.mark)
                 return i
 
+
+class HumanPlayer(Player):
+    def __init__(self, mark, display):
+        self.mark = mark
+        self.other_player = "O" if self.mark == "X" else "X"
+        self.display = display
+        self.reset()
+
+
+    def move(self, board, previous_move):
+        move_int = -1
+        message = "Player " + self.mark + "'s turn, please enter your move"
+        while move_int < 0 or move_int > constants.num_cols:
+            move = self.display.get_move(message)
+            try:
+                move_int = int(move)
+            except:
+                message = "Player " + self.mark + "'s turn, please enter a valid move between 0 and 6"
+                pass
+        return move_int
+
