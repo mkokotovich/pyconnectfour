@@ -32,17 +32,17 @@ class GameEngine(object):
         self.playerO.reset()
 
         while not self.board_is_full():
-            self.display.update("{}'s turn".format( "Player X" if playerX_turn else "Player O" ))
+            self.display.update("{0}'s turn".format( "Player X" if playerX_turn else "Player O" ))
             successful_move = False
             while not successful_move:
                 try:
                     self.make_move(playerX_turn)
                     successful_move = True
                 except constants.InvalidMove:
-                    self.display.update("{}'s turn, please make a valid move".format( "Player X" if playerX_turn else "Player O" ))
+                    self.display.update("{0}'s turn, please make a valid move".format( "Player X" if playerX_turn else "Player O" ))
 
             if utils.check_for_winner(self.board, self.last_move_col, self.last_move_row, self.playerX_mark if playerX_turn else self.playerO_mark):
-                self.display.update("Game over, {} won!".format( "Player X" if playerX_turn else "Player O" ))
+                self.display.update("Game over, {0} won!".format( "Player X" if playerX_turn else "Player O" ))
                 return
             playerX_turn = not playerX_turn
 
@@ -63,10 +63,10 @@ class GameEngine(object):
         else:
             move = self.playerO.move(copy.deepcopy(self.board), self.last_move_col)
 
-        log.debug("On turn {}, Player {} selects column {}".format(self.turns, "X" if playerX_turn else "O", move))
+        log.debug("On turn {0}, Player {1} selects column {2}".format(self.turns, "X" if playerX_turn else "O", move))
 
         if move < 0 or move > 6:
-            raise constants.InvalidMove("Invalid move, less than 0 or greater than 6: {}".format(move))
+            raise constants.InvalidMove("Invalid move, less than 0 or greater than 6: {0}".format(move))
         success = False
         for i in range(0, constants.num_rows):
             row = constants.num_rows - 1 - i
@@ -75,7 +75,7 @@ class GameEngine(object):
                 success = True
                 break
         if success == False:
-            raise constants.InvalidMove("Invalid move, could not find an empty spot in column {}".format(move))
+            raise constants.InvalidMove("Invalid move, could not find an empty spot in column {0}".format(move))
         self.turns += 1
         self.last_move_col = move
         self.last_move_row = row

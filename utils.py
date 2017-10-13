@@ -108,18 +108,18 @@ def check_for_winner(board, move_col, move_row, move_mark):
     # Including the move, we need to have three other consecutive pieces
     winner = False
     if cons_left + cons_right >= 3:
-        log.info("Winner found going left ({}) and right ({})".format(cons_left, cons_right))
+        log.info("Winner found going left ({0}) and right ({1})".format(cons_left, cons_right))
         winner = True
     if cons_up + cons_down >= 3:
-        log.info("Winner found going up ({}) and down ({})".format(cons_up, cons_down))
+        log.info("Winner found going up ({0}) and down ({1})".format(cons_up, cons_down))
         winner = True
     if cons_nw + cons_se >= 3:
-        log.info("Winner found going nw ({}) and se ({})".format(cons_nw, cons_se))
+        log.info("Winner found going nw ({0}) and se ({1})".format(cons_nw, cons_se))
         winner = True
     if cons_ne + cons_sw >= 3:
-        log.info("Winner found going ne ({}) and sw ({})".format(cons_ne, cons_sw))
+        log.info("Winner found going ne ({0}) and sw ({1})".format(cons_ne, cons_sw))
         winner = True
-    log.debug("Checking for winner in col {} and row {} for player {}: {}".format(move_col, move_row, move_mark, winner))
+    log.debug("Checking for winner in col {0} and row {1} for player {2}: {3}".format(move_col, move_row, move_mark, winner))
 
     return winner
 
