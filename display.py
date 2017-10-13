@@ -21,7 +21,7 @@ class DisplayManager(object):
         if not self.display_thread.isAlive():
             raise constants.UserQuit("User quit the game")
         if message != None:
-            log.info("Message from display: {}".format(message))
+            log.info("Message from display: {0}".format(message))
         self.update_queue.put(message)
 
     def get_move(self, message):
@@ -31,7 +31,7 @@ class DisplayManager(object):
         self.update_queue.put("input")
         self.update_queue.put(message)
         move = self.input_queue.get(block=True)
-        log.info("Received {} from user".format(move))
+        log.info("Received {0} from user".format(move))
         if move == None:
             raise constants.UserQuit("User quit game")
         return move
