@@ -14,5 +14,5 @@ try:
 
 except Exception as e:
     display.exit()
-    print str(e)
+    print(str(e))
     traceback.print_exc()

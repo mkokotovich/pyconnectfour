@@ -18,7 +18,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the left
         col = move_col - i - 1
         if board[move_row][col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(col, move_row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(col, move_row))
             cons_left += 1
         else:
             break
@@ -28,7 +28,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the right
         col = i
         if board[move_row][col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(col, move_row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(col, move_row))
             cons_right += 1
         else:
             break
@@ -38,7 +38,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the right
         row = move_row - i - 1
         if board[row][move_col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(move_col, row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(move_col, row))
             cons_up += 1
         else:
             break
@@ -48,7 +48,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         # Search from the move to the right
         row = i
         if board[row][move_col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(move_col, row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(move_col, row))
             cons_down += 1
         else:
             break
@@ -61,7 +61,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row < 0:
             break
         if board[row][col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(col, row))
             cons_nw += 1
         else:
             break
@@ -74,7 +74,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row < 0:
             break
         if board[row][col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(col, row))
             cons_ne += 1
         else:
             break
@@ -87,7 +87,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row >= constants.num_rows:
             break
         if board[row][col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(col, row))
             cons_sw += 1
         else:
             break
@@ -100,7 +100,7 @@ def check_for_winner(board, move_col, move_row, move_mark):
         if row >= constants.num_rows:
             break
         if board[row][col] == move_mark:
-            #log.info("Found consecutive mark at col: {} row: {}".format(col, row))
+            #log.debug("Found consecutive mark at col: {} row: {}".format(col, row))
             cons_se += 1
         else:
             break
@@ -108,16 +108,16 @@ def check_for_winner(board, move_col, move_row, move_mark):
     # Including the move, we need to have three other consecutive pieces
     winner = False
     if cons_left + cons_right >= 3:
-        log.info("Winner found going left ({0}) and right ({1})".format(cons_left, cons_right))
+        log.info("Winner found at col {0} and row {1} for player {2} going left ({3}) and right ({4})".format(move_col, move_row, move_mark, cons_left, cons_right))
         winner = True
     if cons_up + cons_down >= 3:
-        log.info("Winner found going up ({0}) and down ({1})".format(cons_up, cons_down))
+        log.info("Winner found at col {0} and row {1} for player {2} going up ({3}) and down ({4})".format(move_col, move_row, move_mark, cons_up, cons_down))
         winner = True
     if cons_nw + cons_se >= 3:
-        log.info("Winner found going nw ({0}) and se ({1})".format(cons_nw, cons_se))
+        log.info("Winner found at col {0} and row {1} for player {2} going nw ({3}) and se ({4})".format(move_col, move_row, move_mark, cons_nw, cons_se))
         winner = True
     if cons_ne + cons_sw >= 3:
-        log.info("Winner found going ne ({0}) and sw ({1})".format(cons_ne, cons_sw))
+        log.info("Winner found at col {0} and row {1} for player {2} going ne ({3}) and sw ({4})".format(move_col, move_row, move_mark, cons_ne, cons_sw))
         winner = True
     log.debug("Checking for winner in col {0} and row {1} for player {2}: {3}".format(move_col, move_row, move_mark, winner))
 

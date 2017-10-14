@@ -21,17 +21,17 @@ class DisplayManager(object):
         if not self.display_thread.isAlive():
             raise constants.UserQuit("User quit the game")
         if message != None:
-            log.info("Message from display: {0}".format(message))
+            log.debug("Message from display: {0}".format(message))
         self.update_queue.put(message)
 
     def get_move(self, message):
         if not self.display_thread.isAlive():
             raise constants.UserQuit("User quit the game")
-        log.info("Asking user for input")
+        log.debug("Asking user for input")
         self.update_queue.put("input")
         self.update_queue.put(message)
         move = self.input_queue.get(block=True)
-        log.info("Received {0} from user".format(move))
+        log.debug("Received {0} from user".format(move))
         if move == None:
             raise constants.UserQuit("User quit game")
         return move
@@ -185,11 +185,11 @@ class TextOnlyDisplayCurses(C4Display):
 
         self.stdscr.addstr(rownum, colnum, "")
         rownum += 1
-        self.stdscr.addstr(rownum, colnum, "0  1  2  3  4  5  6")
+        self.stdscr.addstr(rownum, colnum, "1  2  3  4  5  6  7")
         rownum += 1
         if get_input:
             self.stdscr.addstr(rownum, colnum, "Please enter the column number you'd like to play in:")
             rownum += 1
 
-	self.stdscr.refresh()
+        self.stdscr.refresh()
 

@@ -38,7 +38,8 @@ class GameEngine(object):
                 try:
                     self.make_move(playerX_turn)
                     successful_move = True
-                except constants.InvalidMove:
+                except constants.InvalidMove as ex:
+                    log.info(ex)
                     self.display.update("{0}'s turn, please make a valid move".format( "Player X" if playerX_turn else "Player O" ))
 
             if utils.check_for_winner(self.board, self.last_move_col, self.last_move_row, self.playerX_mark if playerX_turn else self.playerO_mark):

@@ -1,5 +1,9 @@
 import logging
-logging.basicConfig(filename='c4.log',level=logging.DEBUG)
+
+log_level = logging.INFO
+
+
+logging.basicConfig(filename='c4.log',level=log_level)
 
 def error(message):
     logging.error(message)
