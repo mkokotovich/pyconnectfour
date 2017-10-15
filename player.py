@@ -209,29 +209,49 @@ class MattAI(Player):
         return opponent_can_win
 
 
-    def find_a_move_that_does_not_give_opponent_win_in_two_moves(self, board):
-        move = None
-        random_cols = range(0, constants.num_cols)
-        random.shuffle(random_cols)
-        for col in random_cols:
+    def remove_full_columns(self, board, potential_moves):
+        new_moves = []
+        for col in potential_moves:
+            row = self.find_first_empty_row(board, col)
+            if row == None:
+                continue
+            else:
+                new_moves.append(col)
+        log.info("remove_full_columns: player {} keeps moves {}".format(self.mark, new_moves))
+        return new_moves
+
+
+    def remove_moves_that_give_opponent_an_immediate_winning_move(self, board, potential_moves):
+        new_moves = []
+        for col in potential_moves:
+            row = self.find_first_empty_row(board, col)
+            if row == None:
+                # Should not happen, but keeping this just in case
+                continue
+            if self.other_could_win_after_this_move(board, col, row):
+                continue
+            else:
+                new_moves.append(col)
+        log.info("remove_moves_that_give_opponent_an_immediate_winning_move: player {} keeps moves: {}".format(self.mark, new_moves))
+        return new_moves
+
+
+    # Doesn't check for opponent winning in a single move, as that should be 
+    # removed already
+    def remove_moves_that_give_opponent_a_winning_move_in_two_moves(self, board, potential_moves):
+        new_moves = []
+        for col in potential_moves:
             row = self.find_first_empty_row(board, col)
             if row == None:
                 continue
             # If we play here
             board[row][col] = self.mark
-            # Can the opponent win?
-            opponent_win = self.check_for_opponent_winning_move(board)
-            # If the opponent can win, skip this move
-            if opponent_win != None:
-                # Reset board
-                board[row][col] = None
-                continue
             # If we are at the top of the board, it can't hurt
             if row == 0:
-                move = col
                 # Reset board
                 board[row][col] = None
-                break
+                new_moves.append(col)
+                continue
             # If opponent plays above us:
             board[row-1][col] = self.other_player
             # can the opponent have two winning moves?
@@ -243,41 +263,13 @@ class MattAI(Player):
                 board[row-1][col] = None
                 continue
             # If we've made it this far, the move is safe
-            move = col
-            # Reset board
+            new_moves.append(col)
+            # Reset board and continue to next col
             board[row][col] = None
             board[row-1][col] = None
-            break
 
-        if move is not None:
-            log.info("find_a_move_that_does_not_give_opponent_win_in_two_moves: player {} finds move in column {} that does not allow the computer to win in two moves".format(self.mark, col))
-        return move
-
-
-    def find_a_move_that_does_not_give_the_opponent_a_win(self, board):
-        random_cols = range(0, constants.num_cols)
-        random.shuffle(random_cols)
-        for col in random_cols:
-            row = self.find_first_empty_row(board, col)
-            if row == None:
-                continue
-            if self.other_could_win_after_this_move(board, col, row):
-                continue
-            log.info("find_a_move_that_does_not_give_the_opponent_a_win: player {} finds column {} to have room and not give opponent a winning move".format(self.mark, col))
-            return col
-        return None
-
-
-    def find_any_available_move(self, board):
-        random_cols = range(0, constants.num_cols)
-        random.shuffle(random_cols)
-        for col in random_cols:
-            row = self.find_first_empty_row(board, col)
-            if row == None:
-                continue
-            log.info("find_any_available_move: player {} finds column {} to have room, length {}".format(self.mark, col, len(self.columns[col])))
-            return col
-        return None
+        log.info("remove_moves_that_give_opponent_a_winning_move_in_two_moves: player {} keeps moves: {}".format(self.mark, new_moves))
+        return new_moves
 
 
     def move(self, board, previous_move):
@@ -304,25 +296,42 @@ class MattAI(Player):
         ###
         # At this point, filter out moves that are undesirable before choosing a move
         ###
-        # First remove all moves that give the oppenent an immediate winning move
-        # Then remove all moves that give the opponent a winning move in two moves
+        potential_moves = range(0,constants.num_cols)
 
-        # Then pick a move that blocks opponent from getting three in a row?
-        # Or pick a move that gives me two or three in a row (especially if it can't just be blocked)
+        # Not looping, just a way to break to bottom
+        while True:
+            # Remove any full columns first
+            new_moves = self.remove_full_columns(board, potential_moves)
+            if len(new_moves) != 0:
+                potential_moves = new_moves
+            else:
+                log.error("move: Error: No valid moves, this should have been caught by the game engine")
+                break
 
-        # Pick any move that will not give the opponent a winning move in two moves
-        move = self.find_a_move_that_does_not_give_opponent_win_in_two_moves(board)
-        if move != None:
-            return move
-        # If none available, pick any move that will not give the opponent a winning move
-        move = self.find_a_move_that_does_not_give_the_opponent_a_win(board)
-        if move != None:
-            return move
-        # Fall back to any available move
-        move = self.find_any_available_move(board)
-        if move != None:
-            return move
-        return -1
+            # Remove all moves that give the oppenent an immediate winning move
+            new_moves = self.remove_moves_that_give_opponent_an_immediate_winning_move(board, potential_moves)
+            if len(new_moves) != 0:
+                potential_moves = new_moves
+            else:
+                break
+            
+            # Then remove all moves that give the opponent a winning move in two moves
+            new_moves = self.remove_moves_that_give_opponent_a_winning_move_in_two_moves(board, potential_moves)
+            if len(new_moves) != 0:
+                potential_moves = new_moves
+            else:
+                break
+
+            # Then pick a move that blocks opponent from getting three in a row?
+            # Or pick a move that gives me two or three in a row (especially if it can't just be blocked)
+
+            # Exit this fake loop
+            break
+
+        # Now pick any of the remaining moves
+        move = random.choice(potential_moves)
+
+        return move
 
 
 class JohnPlayer(Player):
