@@ -299,6 +299,17 @@ class MattAI(Player):
         move = self.check_for_move_that_blocks_opponent_in_two_moves(board)
         if move != None:
             return move
+
+
+        ###
+        # At this point, filter out moves that are undesirable before choosing a move
+        ###
+        # First remove all moves that give the oppenent an immediate winning move
+        # Then remove all moves that give the opponent a winning move in two moves
+
+        # Then pick a move that blocks opponent from getting three in a row?
+        # Or pick a move that gives me two or three in a row (especially if it can't just be blocked)
+
         # Pick any move that will not give the opponent a winning move in two moves
         move = self.find_a_move_that_does_not_give_opponent_win_in_two_moves(board)
         if move != None:
