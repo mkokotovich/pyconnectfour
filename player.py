@@ -159,6 +159,68 @@ class MattAI(Player):
         return winning_moves
 
 
+    def check_for_iterative_winning_move(self, board, row, col):
+        forced_win = False
+        i = 0
+        win_cols = []
+        win_rows = []
+        move_cols = []
+        move_rows = []
+        while forced_win == False:
+            # If we play here
+            board[row][col] = self.mark
+            move_rows.append(row)
+            move_cols.append(col)
+            opponent_win = self.check_for_opponent_winning_move(board, "check_for_iterative_winning_move-{}".format(i))
+            # If the opponent can win, skip this move
+            if opponent_win != None:
+                break
+            win_col = self.check_for_winning_move(board, "check_for_iterative_winning_move-{}".format(i))
+            if win_col == None:
+                # No winning moves, break
+                break
+            # If there is a winning move, and opponent blocks it, does that still give us a winning move?
+            win_row = utils.find_first_empty_row(board, win_col)
+            win_cols.append(win_col)
+            win_rows.append(win_row)
+            board[win_row][win_col] = self.other_player
+            second_win = self.check_for_winning_move(board, "check_for_iterative_winning_move-{} second_move".format(i))
+            if second_win != None:
+                # Yes, there is a winning move
+                force_win = True
+                break
+            else:
+                # If there is no winning move, play above the opponent and check again
+                row = win_row - 1
+                if row < 0:
+                    break
+                col = win_col
+            i += 1
+
+        # Clean up
+        for i in range(0, len(win_cols)):
+            board[win_rows[i]][win_cols[i]] = None
+
+        for i in range(0, len(move_cols)):
+            board[move_rows[i]][move_cols[i]] = None
+
+        return forced_win
+
+
+    def check_for_move_that_wins_eventually(self, board):
+        winning_move = None
+        for col in range(0, constants.num_cols):
+            row = utils.find_first_empty_row(board, col)
+            if row == None:
+                continue
+            if self.check_for_iterative_winning_move(board, row, col):
+                winning_move = col
+                break
+        if winning_move is not None:
+            log.info("check_for_move_that_wins_eventually: player {} finds move in column {} that allows them to win eventually".format(self.mark, col))
+        return winning_move
+
+
     def check_for_move_that_wins_in_two_moves(self, board):
         best_move = None
         for col in range(0, constants.num_cols):
@@ -178,10 +240,10 @@ class MattAI(Player):
                 best_move = col
             elif winning_moves == 1:
                 # If there is one winning move, and opponent blocks it, does that give us a winning move?
-                win_col = self.check_for_winning_move(board, "check_for_move_that_blocks_opponent_in_two_moves")
+                win_col = self.check_for_winning_move(board, "check_for_move_that_wins_in_two_moves")
                 win_row = utils.find_first_empty_row(board, win_col)
                 board[win_row][win_col] = self.other_player
-                second_win = self.check_for_winning_move(board, "check_for_move_that_blocks_opponent_in_two_moves second_move")
+                second_win = self.check_for_winning_move(board, "check_for_move_that_wins_in_two_moves second_move")
                 if second_win != None:
                     # This will guarantee victory, play it!
                     best_move = col
@@ -356,8 +418,8 @@ class MattAI(Player):
         move = self.check_for_opponent_winning_move(board)
         if move != None:
             return move
-        # Then check to see if I have a move that will make me win in two moves
-        move = self.check_for_move_that_wins_in_two_moves(board)
+        # Then check to see if I have a move that will make me win eventually
+        move = self.check_for_move_that_wins_eventually(board)
         if move != None:
             return move
         # Then check to see if I need to block my opponent from winning in two moves
