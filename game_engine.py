@@ -24,6 +24,7 @@ class GameEngine(object):
             self.play_one_game()
         except constants.UserQuit:
             log.info("User quit, exitting")
+        log.flush()
 
 
     def play_one_game(self):

@@ -22,6 +22,10 @@ def exit_logger():
 atexit.register(exit_logger)
 
 
+def flush():
+    if log:
+        log.flush()
+
 def write_message(message):
     log.write(message + "\n")
 

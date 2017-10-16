@@ -94,72 +94,82 @@ class MattAI(Player):
     def __init__(self, mark):
         self.mark = mark
         self.other_player = "O" if self.mark == "X" else "X"
-        self.columns = []
+        self.my_board_analysis = None
         self.reset()
 
 
     def reset(self):
-        self.columns = []
-        for i in range(0, constants.num_cols):
-            self.columns.append([])
+        pass
 
 
-    def find_first_empty_row(self, board, col):
-        for row in range(constants.num_rows - 1, -1, -1):
-            if board[row][col] == None:
-                return row
-        return None
-
-
-    def check_for_winning_move(self, board):
+    # Checks against static board analysis
+    def check_for_winning_move(self):
+        move = None
         for col in range(0, constants.num_cols):
-            row = self.find_first_empty_row(board, col)
-            if row == None:
+            result = self.my_board_analysis[col]
+            if result == None:
                 continue
-            if utils.check_for_winner(board, col, row, self.mark):
+            if result.winner:
                 log.info("check_for_winning_move: player {} finds winning move in column {}".format(self.mark, col))
-                return col
-        return None
+                move = col
+                break
+        log.debug("check_for_winning_move returning {}".format(move))
+        return move
 
 
-    def check_for_opponent_winning_move(self, board):
+    # Checks against board
+    def check_for_opponent_winning_move(self, board, caller=None):
+        caller_str = ""
+        if caller != None:
+            caller_str = " (for {})".format(caller)
+
+        move = None
         for col in range(0, constants.num_cols):
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 continue
             if utils.check_for_winner(board, col, row, self.other_player):
-                log.info("check_for_opponent_winning_move: player {} finds opponents winning move in column {}, choosing it to block".format(self.mark, col))
-                return col
-        return None
+                log.info("check_for_opponent_winning_move{}: player {} finds opponents winning move in column {}".format(caller_str, self.mark, col))
+                move = col
+                break
+
+        log.debug("check_for_opponent_winning_move returning {}".format(move))
+        return move
 
 
-    def count_winning_moves(self, board, mark):
+    def count_winning_moves(self, board, mark, caller=None):
+        caller_str = ""
+        if caller != None:
+            caller_str = " (for {})".format(caller)
+
         winning_moves = 0
+        winning_move_cols = []
         for col in range(0, constants.num_cols):
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 continue
             if utils.check_for_winner(board, col, row, mark):
-                log.debug("player {} finds winning move in column {}".format(mark, col))
                 winning_moves += 1
+                winning_move_cols.append(col)
+        log.info("count_winning_moves{}: player {} has {} winning moves in columns {}".format(caller_str, mark, winning_moves, winning_move_cols))
         return winning_moves
 
 
     def check_for_move_that_wins_in_two_moves(self, board):
         best_move = None
         for col in range(0, constants.num_cols):
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 continue
             # If we play here
             board[row][col] = self.mark
-            opponent_win = self.check_for_opponent_winning_move(board)
+            opponent_win = self.check_for_opponent_winning_move(board, "check_for_move_that_wins_in_two_moves")
             # If the opponent can win, skip this move
             if opponent_win != None:
                 board[row][col] = None
                 continue
             # Otherwise count how many winning moves there are for me
-            winning_moves = self.count_winning_moves(board, self.mark)
+            winning_moves = self.count_winning_moves(board, self.mark, "check_for_move_that_wins_in_two_moves")
             if winning_moves > 1:
                 best_move = col
             # reset move for next col
@@ -173,13 +183,13 @@ class MattAI(Player):
     def check_for_move_that_blocks_opponent_in_two_moves(self, board):
         block_it = None
         for col in range(0, constants.num_cols):
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 continue
             # If we play here
             board[row][col] = self.mark
             # Can the opponent win?
-            opponent_win = self.check_for_opponent_winning_move(board)
+            opponent_win = self.check_for_opponent_winning_move(board, "check_for_move_that_blocks_opponent_in_two_moves")
             # Reset board
             board[row][col] = None
             # If the opponent can win, skip this move
@@ -188,7 +198,7 @@ class MattAI(Player):
             # If opponent plays here
             board[row][col] = self.other_player
             # can the opponent have two winning moves?
-            winning_moves = self.count_winning_moves(board, self.other_player)
+            winning_moves = self.count_winning_moves(board, self.other_player, "check_for_move_that_blocks_opponent_in_two_moves")
             if winning_moves > 1:
                 block_it = col
             # reset move for next col
@@ -203,7 +213,7 @@ class MattAI(Player):
         # If we play here
         board[row][col] = self.mark
         # Can the opponent win?
-        opponent_can_win = self.check_for_opponent_winning_move(board)
+        opponent_can_win = self.check_for_opponent_winning_move(board, "other_could_win_after_this_move")
         # Reset the board
         board[row][col] = None
         return opponent_can_win
@@ -212,7 +222,7 @@ class MattAI(Player):
     def remove_full_columns(self, board, potential_moves):
         new_moves = []
         for col in potential_moves:
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 continue
             else:
@@ -224,7 +234,7 @@ class MattAI(Player):
     def remove_moves_that_give_opponent_an_immediate_winning_move(self, board, potential_moves):
         new_moves = []
         for col in potential_moves:
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 # Should not happen, but keeping this just in case
                 continue
@@ -241,7 +251,7 @@ class MattAI(Player):
     def remove_moves_that_give_opponent_a_winning_move_in_two_moves(self, board, potential_moves):
         new_moves = []
         for col in potential_moves:
-            row = self.find_first_empty_row(board, col)
+            row = utils.find_first_empty_row(board, col)
             if row == None:
                 continue
             # If we play here
@@ -255,7 +265,7 @@ class MattAI(Player):
             # If opponent plays above us:
             board[row-1][col] = self.other_player
             # can the opponent have two winning moves?
-            winning_moves = self.count_winning_moves(board, self.other_player)
+            winning_moves = self.count_winning_moves(board, self.other_player, "remove_moves_that_give_opponent_a_winning_move_in_two_moves")
             if winning_moves > 1:
                 # If so, skip this move
                 # Reset board
@@ -272,11 +282,22 @@ class MattAI(Player):
         return new_moves
 
 
+    def find_moves_that_give_at_least_two_in_a_row(self, potential_moves):
+        return potential_moves
+
+    def find_moves_that_give_at_least_three_in_a_row(self, potential_moves):
+        return potential_moves
+
+    def find_moves_that_block_opponent_from_getting_three_in_a_row(self, potential_moves):
+        return potential_moves
+
+
     def move(self, board, previous_move):
-        if previous_move != None:
-            self.columns[previous_move].append(self.other_player)
+        # First analyze the board for me
+        self.my_board_analysis = utils.analyze_board(board, self.mark)
+
         # First check to see if I can win
-        move = self.check_for_winning_move(board)
+        move = self.check_for_winning_move()
         if move != None:
             return move
         # Then check to see if I need to block my opponent from winning
@@ -322,11 +343,29 @@ class MattAI(Player):
             else:
                 break
 
-            # Then pick a move that blocks opponent from getting three in a row?
-            # Or pick a move that gives me two or three in a row (especially if it can't just be blocked)
+            # Exit this fake loop
+            break
+
+        # Another fake loop, just to control code flow
+        while True:
+            # Then find moves that gives me two in a row
+            new_moves = self.find_moves_that_give_at_least_two_in_a_row(potential_moves)
+            if len(new_moves) != 0:
+                potential_moves = new_moves
+
+            # Then find moves that gives me three in a row
+            new_moves = self.find_moves_that_give_at_least_three_in_a_row(potential_moves)
+            if len(new_moves) != 0:
+                potential_moves = new_moves
+
+            # Then find moves that blocks opponent from getting three in a row
+            new_moves = self.find_moves_that_block_opponent_from_getting_three_in_a_row(potential_moves)
+            if len(new_moves) != 0:
+                potential_moves = new_moves
 
             # Exit this fake loop
             break
+
 
         # Now pick any of the remaining moves
         move = random.choice(potential_moves)
