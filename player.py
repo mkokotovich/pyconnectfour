@@ -95,6 +95,7 @@ class MattAI(Player):
         self.mark = mark
         self.other_player = "O" if self.mark == "X" else "X"
         self.my_board_analysis = None
+        self.other_board_analysis = None
         self.reset()
 
 
@@ -282,11 +283,26 @@ class MattAI(Player):
         return new_moves
 
 
+    def find_moves_that_give_at_least_x_in_a_row(self, potential_moves, num_consecutive):
+        new_moves = []
+        for col in potential_moves:
+            result = self.my_board_analysis[col]
+            if result == None:
+                continue
+            # num_consecutive includes the current move, results.consecutives doesn't
+            if max(result.consecutives) >= num_consecutive - 1:
+                new_moves.append(col)
+        return new_moves
+
     def find_moves_that_give_at_least_two_in_a_row(self, potential_moves):
-        return potential_moves
+        new_moves = self.find_moves_that_give_at_least_x_in_a_row(potential_moves, 2)
+        log.info("find_moves_that_give_at_least_two_in_a_row: player {} keeps moves: {}".format(self.mark, new_moves))
+        return new_moves
 
     def find_moves_that_give_at_least_three_in_a_row(self, potential_moves):
-        return potential_moves
+        new_moves = self.find_moves_that_give_at_least_x_in_a_row(potential_moves, 3)
+        log.info("find_moves_that_give_at_least_three_in_a_row: player {} keeps moves: {}".format(self.mark, new_moves))
+        return new_moves
 
     def find_moves_that_block_opponent_from_getting_three_in_a_row(self, potential_moves):
         return potential_moves
@@ -345,6 +361,9 @@ class MattAI(Player):
 
             # Exit this fake loop
             break
+
+        # The next block of logic will use board analysis for other player
+        self.other_board_analysis = utils.analyze_board(board, self.other_player)
 
         # Another fake loop, just to control code flow
         while True:
